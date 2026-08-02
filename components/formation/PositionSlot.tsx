@@ -31,8 +31,18 @@ export default function PositionSlot({
 }: Props) {
   return (
     <div
-        className="absolute -translate-x-1/2 -translate-y-1/2"
-        style={{ top, left }}
+      className="
+        absolute
+        -translate-x-1/2
+        -translate-y-1/2
+        transition-all
+        duration-700
+        ease-in-out
+      "
+      style={{
+        top,
+        left,
+      }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
             e.preventDefault();

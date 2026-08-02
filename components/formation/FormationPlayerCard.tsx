@@ -21,6 +21,9 @@ export default function FormationPlayerCard({ player }: Props) {
         items-center
         cursor-grab
         active:cursor-grabbing
+
+        transition-all
+        duration-500
         
         "
     >

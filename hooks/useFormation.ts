@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Player } from "@/lib/players";
+import { remapFormation } from "@/lib/formationMapper";
 
 export type Formation =
   | "4-3-3"
@@ -13,41 +14,83 @@ export interface Lineup {
   GK: Player | null;
 
   LB: Player | null;
-  CB1: Player | null;
-  CB2: Player | null;
   RB: Player | null;
 
+  CB1: Player | null;
+  CB2: Player | null;
+
+  LCB: Player | null;
+  CB: Player | null;
+  RCB: Player | null;
+
+  LWB: Player | null;
+  RWB: Player | null;
+
+  CDM: Player | null;
   CDM1: Player | null;
   CDM2: Player | null;
 
+  CM1: Player | null;
+  CM2: Player | null;
+
+  LM: Player | null;
+  RM: Player | null;
+
   LW: Player | null;
-  CAM: Player | null;
   RW: Player | null;
 
+  LAM: Player | null;
+  RAM: Player | null;
+
+  CAM: Player | null;
+
   ST: Player | null;
+  ST1: Player | null;
+  ST2: Player | null;
 }
 
 const EMPTY_LINEUP: Lineup = {
   GK: null,
 
   LB: null,
-  CB1: null,
-  CB2: null,
   RB: null,
 
+  CB1: null,
+  CB2: null,
+
+  LCB: null,
+  CB: null,
+  RCB: null,
+
+  LWB: null,
+  RWB: null,
+
+  CDM: null,
   CDM1: null,
   CDM2: null,
 
+  CM1: null,
+  CM2: null,
+
+  LM: null,
+  RM: null,
+
   LW: null,
-  CAM: null,
   RW: null,
 
+  LAM: null,
+  RAM: null,
+
+  CAM: null,
+
   ST: null,
+  ST1: null,
+  ST2: null,
 };
 
 export function useFormation() {
-  const [formation, setFormation] =
-    useState<Formation>("4-3-3");
+  const [formation, setFormationState] =
+  useState<Formation>("4-3-3");
 
   const [selectedPlayer, setSelectedPlayer] =
     useState<Player | null>(null);
@@ -100,10 +143,19 @@ export function useFormation() {
     }));
   }
 
+  function setFormation(newFormation: Formation) {
+  setLineup((prev) =>
+    remapFormation(prev, formation, newFormation)
+  );
+
+  setFormationState(newFormation);
+}
+
   function resetFormation() {
-    setLineup(EMPTY_LINEUP);
-    setSelectedPlayer(null);
-  }
+  setLineup(EMPTY_LINEUP);
+  setSelectedPlayer(null);
+  setFormationState("4-3-3");
+}
 
   return {
     formation,

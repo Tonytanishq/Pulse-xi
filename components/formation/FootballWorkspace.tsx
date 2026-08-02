@@ -52,10 +52,11 @@ export default function FootballWorkspace() {
         />
 
         <FootballPitch
-            lineup={lineup}
-            assignPlayer={assignPlayer}
-            assignDraggedPlayer={assignDraggedPlayer}
-            removePlayer={removePlayer}
+          formation={formation}
+          lineup={lineup}
+          assignPlayer={assignPlayer}
+          assignDraggedPlayer={assignDraggedPlayer}
+          removePlayer={removePlayer}
         />
 
       </div>

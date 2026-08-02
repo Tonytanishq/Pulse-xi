@@ -28,13 +28,13 @@ export default function FootballPitch({
   removePlayer,
 }: FootballPitchProps) {
 
-  const positions = Object.entries(
-    FORMATION_POSITIONS[formation]
-  ).map(([key, value]) => ({
+const positions = Object.entries(FORMATION_POSITIONS[formation] ?? {}).map(
+  ([key, value]) => ({
     key,
     top: value.top,
     left: value.left,
-  }));
+  })
+);
 
   return (
     <div className="relative h-[900px] w-full overflow-hidden rounded-[36px] border border-green-500/20 bg-[#0b5d26] shadow-2xl">
