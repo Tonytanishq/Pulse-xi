@@ -98,6 +98,66 @@ export function useFormation() {
   const [lineup, setLineup] =
     useState<Lineup>(EMPTY_LINEUP);
 
+  function setCaptain(player: Player) {
+  setLineup((prev) => {
+    const updated = { ...prev };
+
+    // Remove captain from everyone
+    (Object.keys(updated) as (keyof Lineup)[]).forEach((key) => {
+      if (updated[key]) {
+        updated[key] = {
+          ...updated[key]!,
+          captain: false,
+        };
+      }
+    });
+
+    // Assign new captain
+    const position = (
+      Object.keys(updated) as (keyof Lineup)[]
+    ).find((key) => updated[key]?.id === player.id);
+
+    if (position && updated[position]) {
+      updated[position] = {
+        ...updated[position]!,
+        captain: true,
+      };
+    }
+
+    return updated;
+  });
+}
+
+function setViceCaptain(player: Player) {
+  setLineup((prev) => {
+    const updated = { ...prev };
+
+    // Remove vice captain from everyone
+    (Object.keys(updated) as (keyof Lineup)[]).forEach((key) => {
+      if (updated[key]) {
+        updated[key] = {
+          ...updated[key]!,
+          viceCaptain: false,
+        };
+      }
+    });
+
+    // Assign new vice captain
+    const position = (
+      Object.keys(updated) as (keyof Lineup)[]
+    ).find((key) => updated[key]?.id === player.id);
+
+    if (position && updated[position]) {
+      updated[position] = {
+        ...updated[position]!,
+        viceCaptain: true,
+      };
+    }
+
+    return updated;
+  });
+}
+
   function assignPlayer(position: keyof Lineup) {
     if (!selectedPlayer) return;
 
@@ -169,6 +229,9 @@ export function useFormation() {
     assignPlayer,
     assignDraggedPlayer,
     removePlayer,
+
+    setCaptain,
+    setViceCaptain,
 
     resetFormation,
   };

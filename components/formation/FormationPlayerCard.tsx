@@ -23,15 +23,12 @@ export default function FormationPlayerCard({ player }: Props) {
           scale: 1,
           opacity: 1,
         }}
-
         whileHover={{
           scale: 1.08,
         }}
-
         whileTap={{
           scale: 0.95,
         }}
-
         transition={{
           type: "spring",
           stiffness: 320,
@@ -56,20 +53,15 @@ export default function FormationPlayerCard({ player }: Props) {
             items-center
             justify-center
             rounded-full
-
             bg-gradient-to-br
             from-cyan-400
             to-blue-600
-
             text-xl
             font-black
             text-white
-
             shadow-lg
-
             transition-all
             duration-300
-
             group-hover:shadow-cyan-400/70
             group-hover:shadow-2xl
           "
@@ -87,12 +79,20 @@ export default function FormationPlayerCard({ player }: Props) {
           #{player.jersey} • {player.position}
         </p>
 
-        {/* Captain */}
-        {player.captain && (
-          <span className="mt-1 rounded-full bg-yellow-500 px-2 py-0.5 text-[10px] font-bold text-black">
-            C
-          </span>
-        )}
+        {/* Leadership Badges */}
+        <div className="mt-1 flex gap-1">
+          {player.captain && (
+            <span className="rounded-full bg-yellow-500 px-2 py-0.5 text-[10px] font-bold text-black">
+              C
+            </span>
+          )}
+
+          {player.viceCaptain && (
+            <span className="rounded-full bg-gray-300 px-2 py-0.5 text-[10px] font-bold text-black">
+              VC
+            </span>
+          )}
+        </div>
       </motion.div>
     </div>
   );

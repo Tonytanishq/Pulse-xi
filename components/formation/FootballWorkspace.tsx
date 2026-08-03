@@ -21,6 +21,9 @@ export default function FootballWorkspace() {
   formation,
   setFormation,
 
+  setCaptain,
+  setViceCaptain,
+
   resetFormation,
 } = useFormation();
 
@@ -64,7 +67,11 @@ export default function FootballWorkspace() {
         </LayoutGroup>
 
 
-        <PlayerDetails  player={selectedPlayer}/>
+        <PlayerDetails
+          player={selectedPlayer}
+          onCaptain={setCaptain}
+          onViceCaptain={setViceCaptain}
+        />
 
       </div>
 

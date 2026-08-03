@@ -15,6 +15,7 @@ export interface Player {
   name: string;
   position: string;
   captain?: boolean;
+  viceCaptain?: boolean;
 
   // Derived profile (all optional so legacy consumers keep compiling)
   group?: PositionGroup;
@@ -69,7 +70,7 @@ const roster: RosterEntry[] = [
   { id: 20, jersey: 33, name: "ARAVIND", position: "RM/RB" },
   { id: 21, jersey: 25, name: "GANESH", position: "ST" },
   { id: 22, jersey: 20, name: "NIRANJAN", position: "LM/RM" },
-  { id: 23, jersey: 3, name: "TONY", position: "CB", captain: true },
+  { id: 23, jersey: 3, name: "TONY", position: "CB", },
   { id: 24, jersey: 22, name: "ARJUN", position: "RB" },
   { id: 25, jersey: 7, name: "MURARI", position: "CDM" },
   { id: 26, jersey: 11, name: "SIDDHU", position: "ST" },
@@ -161,7 +162,6 @@ export function getPlayer(id: number): Player | undefined {
   return players.find((p) => p.id === id);
 }
 
-export const captain = players.find((p) => p.captain);
 
 // --- roster-level aggregates (used across dashboard / analytics) ---
 export const teamStats = {
