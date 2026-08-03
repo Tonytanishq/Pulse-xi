@@ -4,6 +4,7 @@ import { Player } from "@/lib/players";
 import { players } from "@/lib/players";
 import FormationPlayerCard from "./FormationPlayerCard";
 import { Lineup } from "@/hooks/useFormation";
+import { motion } from "framer-motion";
 
 interface Props {
   position: keyof Lineup;
@@ -17,6 +18,8 @@ interface Props {
     player: Player
   ) => void;
 
+  onPlayerSelect: (player: Player) => void;
+
   removePlayer: (position: keyof Lineup) => void;
 }
 
@@ -27,17 +30,22 @@ export default function PositionSlot({
   left,
   onClick,
   assignDraggedPlayer,
+  onPlayerSelect,
   removePlayer,
 }: Props) {
   return (
-    <div
+    <motion.div
+      layout
+      layoutRoot
+      transition={{
+        type: "spring",
+        stiffness: 140,
+        damping: 18,
+      }}
       className="
         absolute
         -translate-x-1/2
         -translate-y-1/2
-        transition-all
-        duration-700
-        ease-in-out
       "
       style={{
         top,
@@ -76,10 +84,12 @@ export default function PositionSlot({
         >
 
         <div
-            onClick={onClick}
-            className="transition cursor-pointer"
-        >
-            <FormationPlayerCard player={player} />
+          onClick={() => {
+            onPlayerSelect(player);
+          }}
+          className="transition cursor-pointer"
+          >
+          <FormationPlayerCard player={player} />
         </div>
 
           {/* Remove Button */}
@@ -131,6 +141,6 @@ export default function PositionSlot({
                 <span className="text-xs">{position}</span>
             </button>
       )}
-    </div>
+    </motion.div>
   );
 }

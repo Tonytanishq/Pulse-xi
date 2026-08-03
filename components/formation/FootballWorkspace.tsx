@@ -3,9 +3,10 @@
 import FootballPitch from "./FootballPitch";
 import FormationToolbar from "./FormationToolbar";
 import PlayerBench from "./PlayerBench";
-
 import { players } from "@/lib/players";
 import { useFormation } from "@/hooks/useFormation";
+import { LayoutGroup } from "framer-motion";
+import PlayerDetails from "./PlayerDetails";
 
 export default function FootballWorkspace() {
   const {
@@ -43,7 +44,7 @@ export default function FootballWorkspace() {
         onReset={resetFormation}
       />
 
-      <div className="grid grid-cols-[450px_1fr] gap-6 p-6">
+      <div className="grid grid-cols-[360px_1fr_320px] gap-6 p-6">
 
         <PlayerBench
           players={players}
@@ -51,13 +52,19 @@ export default function FootballWorkspace() {
           onSelect={setSelectedPlayer}
         />
 
-        <FootballPitch
-          formation={formation}
-          lineup={lineup}
-          assignPlayer={assignPlayer}
-          assignDraggedPlayer={assignDraggedPlayer}
-          removePlayer={removePlayer}
-        />
+        <LayoutGroup>
+          <FootballPitch
+            formation={formation}
+            lineup={lineup}
+            assignPlayer={assignPlayer}
+            assignDraggedPlayer={assignDraggedPlayer}
+            removePlayer={removePlayer}
+            onPlayerSelect={setSelectedPlayer}
+          />
+        </LayoutGroup>
+
+
+        <PlayerDetails  player={selectedPlayer}/>
 
       </div>
 

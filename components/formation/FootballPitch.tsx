@@ -18,6 +18,8 @@ interface FootballPitchProps {
   ) => void;
 
   removePlayer: (position: keyof Lineup) => void;
+
+  onPlayerSelect: (player: Player) => void;
 }
 
 export default function FootballPitch({
@@ -26,6 +28,7 @@ export default function FootballPitch({
   assignPlayer,
   assignDraggedPlayer,
   removePlayer,
+  onPlayerSelect,
 }: FootballPitchProps) {
 
 const positions = Object.entries(FORMATION_POSITIONS[formation] ?? {}).map(
@@ -37,7 +40,7 @@ const positions = Object.entries(FORMATION_POSITIONS[formation] ?? {}).map(
 );
 
   return (
-    <div className="relative h-[900px] w-full overflow-hidden rounded-[36px] border border-green-500/20 bg-[#0b5d26] shadow-2xl">
+    <div className="relative h-[900px] w-full overflow-visible rounded-[36px] border border-green-500/20 bg-[#0b5d26] shadow-2xl">
 
       {/* Grass */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#16753b] via-[#126b34] to-[#0d5b2d]" />
@@ -91,13 +94,14 @@ const positions = Object.entries(FORMATION_POSITIONS[formation] ?? {}).map(
       {/* Players */}
       {positions.map((slot) => (
         <PositionSlot
-          key={slot.key}
+          key={`${slot.key}-${lineup[slot.key as keyof Lineup]?.id ?? "empty"}`}
           position={slot.key as keyof Lineup}
           player={lineup[slot.key as keyof Lineup]}
           top={slot.top}
           left={slot.left}
           onClick={() => assignPlayer(slot.key as keyof Lineup)}
           assignDraggedPlayer={assignDraggedPlayer}
+          onPlayerSelect={onPlayerSelect}
           removePlayer={removePlayer}
         />
       ))}
