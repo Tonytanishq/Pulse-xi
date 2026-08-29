@@ -140,7 +140,7 @@ export default function LeaderboardPage() {
                         <Star size={12} className="fill-amber-400 text-amber-400" />
                       )}
                     </p>
-                    <p className="text-xs text-gray-500">{p.position}</p>
+                    <p className="text-xs text-gray-500">{p.primaryPosition}</p>
                   </div>
                   <span className="text-lg font-black text-white">{fmt(p)}</span>
                 </div>

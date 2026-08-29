@@ -7,6 +7,10 @@ import { players } from "@/lib/players";
 import { useFormation } from "@/hooks/useFormation";
 import { LayoutGroup } from "framer-motion";
 import PlayerDetails from "./PlayerDetails";
+import { analyzeFormation } from "@/lib/formationIntelligence";
+import { getFormationRecommendations } from "@/lib/formationRecommendations";
+import FormationIntelligencePanel from "./FormationIntelligencePanel";
+import { buildRecommendedXI } from "@/lib/recommendedXI";
 
 export default function FootballWorkspace() {
   const {
@@ -26,6 +30,19 @@ export default function FootballWorkspace() {
 
   resetFormation,
 } = useFormation();
+
+const intelligence = analyzeFormation(lineup, formation);
+
+const recommendations = getFormationRecommendations(
+  lineup,
+  formation,
+  players
+);
+
+const recommendedXI = buildRecommendedXI(
+  formation,
+  players
+);
 
   return (
     <div className="min-h-screen bg-[#050816] text-white">
@@ -59,6 +76,9 @@ export default function FootballWorkspace() {
           <FootballPitch
             formation={formation}
             lineup={lineup}
+
+            selectedPlayer={selectedPlayer}
+
             assignPlayer={assignPlayer}
             assignDraggedPlayer={assignDraggedPlayer}
             removePlayer={removePlayer}
@@ -67,11 +87,61 @@ export default function FootballWorkspace() {
         </LayoutGroup>
 
 
-        <PlayerDetails
-          player={selectedPlayer}
-          onCaptain={setCaptain}
-          onViceCaptain={setViceCaptain}
-        />
+        <div className="flex flex-col gap-6">
+
+  <button
+    type="button"
+    onClick={() => {
+      recommendedXI.players.forEach((selection) => {
+        assignDraggedPlayer(
+          selection.position,
+          selection.player
+        );
+      });
+    }}
+    className="
+      w-full
+      rounded-2xl
+      border
+      border-cyan-400/30
+      bg-cyan-500/10
+      px-5
+      py-4
+      text-sm
+      font-black
+      tracking-wide
+      text-cyan-300
+      shadow-lg
+      transition-all
+      hover:scale-[1.02]
+      hover:bg-cyan-500/20
+      hover:text-white
+    "
+  >
+    🧠 BUILD BEST XI
+  </button>
+
+  <PlayerDetails
+    player={
+      selectedPlayer
+        ? Object.values(lineup).find(
+            (p) => p?.id === selectedPlayer.id
+          ) ?? selectedPlayer
+        : null
+    }
+    onCaptain={setCaptain}
+    onViceCaptain={setViceCaptain}
+  />
+
+  <FormationIntelligencePanel
+  intelligence={intelligence}
+  recommendations={recommendations.recommendations}
+  onAssignRecommendation={(position, player) => {
+    assignDraggedPlayer(position, player);
+  }}
+/>
+
+</div>
 
       </div>
 

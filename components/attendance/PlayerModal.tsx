@@ -66,7 +66,7 @@ export default function PlayerModal({
               )}
 
               <p className="mt-3 text-xl text-cyan-300">
-                #{player.jersey} • {player.position}
+                #{player.jersey} • {player.primaryPosition}
               </p>
             </div>
 

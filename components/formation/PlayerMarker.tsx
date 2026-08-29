@@ -61,7 +61,7 @@ export default function PlayerMarker({
       {/* Position */}
 
       <p className="text-center text-cyan-300 text-xs">
-        {player.position}
+        {player.primaryPosition}
       </p>
     </button>
   );

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Player } from "@/lib/players";
 import { remapFormation } from "@/lib/formationMapper";
-import { validatePlayerPosition } from "@/lib/positionValidation";
 
 export type Formation =
   | "4-3-3"
@@ -159,18 +158,8 @@ function setViceCaptain(player: Player) {
   });
 }
 
-    function assignPlayer(position: keyof Lineup) {
+  function assignPlayer(position: keyof Lineup) {
     if (!selectedPlayer) return;
-
-    const validation = validatePlayerPosition(
-      selectedPlayer,
-      position
-    );
-
-    // Invalid position → do not assign
-    if (validation === "invalid") {
-      return;
-    }
 
     setLineup((prev) => ({
       ...prev,
@@ -183,41 +172,29 @@ function setViceCaptain(player: Player) {
   function assignDraggedPlayer(
     position: keyof Lineup,
     player: Player
-  ) {
-    const validation = validatePlayerPosition(
-      player,
-      position
-    );
-
-    // Invalid position → do not allow the drop
-    if (validation === "invalid") {
-      return;
-    }
-
+) {
     setLineup((prev) => {
-      const updated = { ...prev };
+        const updated = { ...prev };
 
-      // Find where the dragged player currently is
-      const oldPosition = (
-        Object.keys(updated) as (keyof Lineup)[]
-      ).find(
-        (key) => updated[key]?.id === player.id
-      );
+        // Find where the dragged player currently is
+        const oldPosition = (
+            Object.keys(updated) as (keyof Lineup)[]
+        ).find((key) => updated[key]?.id === player.id);
 
-      // Player already occupying target position
-      const targetPlayer = updated[position];
+        // Player already occupying the target position
+        const targetPlayer = updated[position];
 
-      // Move dragged player
-      updated[position] = player;
+        // Move dragged player
+        updated[position] = player;
 
-      // Swap players if dragged player was already on pitch
-      if (oldPosition) {
-        updated[oldPosition] = targetPlayer;
-      }
+        // Put target player into dragged player's old position
+        if (oldPosition) {
+            updated[oldPosition] = targetPlayer;
+        }
 
-      return updated;
+        return updated;
     });
-  }
+}
 
   function removePlayer(position: keyof Lineup) {
     setLineup((prev) => ({

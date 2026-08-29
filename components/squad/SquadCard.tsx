@@ -48,7 +48,7 @@ export default function SquadCard({ player, index }: { player: Player; index: nu
             )}
           </h3>
           <p className="text-xs uppercase tracking-widest text-gray-400">
-            {player.position} · {player.foot}-footed
+            {player.primaryPosition} · {player.foot}-footed
           </p>
         </div>
         <span

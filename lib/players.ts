@@ -13,11 +13,14 @@ export interface Player {
   id: number;
   jersey: number;
   name: string;
-  position: string;
+
+  primaryPosition: string;
+  secondaryPositions: string[];
+
   captain?: boolean;
   viceCaptain?: boolean;
 
-  // Derived profile (all optional so legacy consumers keep compiling)
+  // Derived profile
   group?: PositionGroup;
   foot?: Foot;
   age?: number;
@@ -31,53 +34,251 @@ export interface Player {
   redCards?: number;
   minutes?: number;
 
-  attendance?: number; // %
-  fitness?: number; // %
-  rating?: number; // avg match rating 0-10
-  form?: number[]; // last 5 ratings
+  attendance?: number;
+  fitness?: number;
+  rating?: number;
+  form?: number[];
   status?: FitnessStatus;
-  joined?: number; // year
+  joined?: number;
 }
 
 interface RosterEntry {
   id: number;
   jersey: number;
   name: string;
-  position: string;
+
+  primaryPosition: string;
+  secondaryPositions: string[];
+
   captain?: boolean;
 }
 
 const roster: RosterEntry[] = [
-  { id: 1, jersey: 54, name: "LOHITH", position: "LM" },
-  { id: 2, jersey: 44, name: "NANDU", position: "LM" },
-  { id: 3, jersey: 13, name: "DEVA", position: "RM" },
-  { id: 4, jersey: 18, name: "MANOJ", position: "CB" },
-  { id: 5, jersey: 14, name: "DANIEL", position: "LM/LB" },
-  { id: 6, jersey: 93, name: "HRISHIKESH", position: "CB" },
-  { id: 7, jersey: 4, name: "SURYA", position: "CB" },
-  { id: 8, jersey: 15, name: "RAHUL", position: "CB" },
-  { id: 9, jersey: 1, name: "KEERTHAN", position: "GK" },
-  { id: 10, jersey: 21, name: "SUVAN", position: "GK" },
-  { id: 11, jersey: 19, name: "MOKSHU", position: "CDM" },
-  { id: 12, jersey: 8, name: "BAGATH CHANDRA", position: "CAM" },
-  { id: 13, jersey: 25, name: "PRANAY", position: "LB" },
-  { id: 14, jersey: 10, name: "ANURAG", position: "LM" },
-  { id: 15, jersey: 17, name: "BALA", position: "CAM" },
-  { id: 16, jersey: 23, name: "MELVIN", position: "LM" },
-  { id: 17, jersey: 16, name: "RAHUL REDDY", position: "ST" },
-  { id: 18, jersey: 5, name: "YESHWANTH MADHANI", position: "CAM" },
-  { id: 19, jersey: 9, name: "SOHAN", position: "CDM" },
-  { id: 20, jersey: 33, name: "ARAVIND", position: "RM/RB" },
-  { id: 21, jersey: 25, name: "GANESH", position: "ST" },
-  { id: 22, jersey: 20, name: "NIRANJAN", position: "LM/RM" },
-  { id: 23, jersey: 3, name: "TONY", position: "CB", },
-  { id: 24, jersey: 22, name: "ARJUN", position: "RB" },
-  { id: 25, jersey: 7, name: "MURARI", position: "CDM" },
-  { id: 26, jersey: 11, name: "SIDDHU", position: "ST" },
-  { id: 27, jersey: 6, name: "NOOR", position: "GK" },
-  { id: 28, jersey: 2, name: "BHASKAR", position: "RB" },
-];
+  {
+    id: 1,
+    jersey: 54,
+    name: "LOHITH",
+    primaryPosition: "LM",
+    secondaryPositions: ["ST"],
+  },
 
+  {
+    id: 2,
+    jersey: 44,
+    name: "NANDU",
+    primaryPosition: "LM",
+    secondaryPositions: ["RM", "LB"],
+  },
+
+  {
+    id: 3,
+    jersey: 13,
+    name: "DEVA",
+    primaryPosition: "RM",
+    secondaryPositions: ["LM"],
+  },
+
+  {
+    id: 4,
+    jersey: 18,
+    name: "MANOJ",
+    primaryPosition: "CB",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 5,
+    jersey: 14,
+    name: "DANIEL",
+    primaryPosition: "LM/LB",
+    secondaryPositions: ["RM", "RB"],
+  },
+
+  {
+    id: 6,
+    jersey: 93,
+    name: "HRISHIKESH",
+    primaryPosition: "CB",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 7,
+    jersey: 4,
+    name: "SURYA",
+    primaryPosition: "CB",
+    secondaryPositions: ["LB"],
+  },
+
+  {
+    id: 8,
+    jersey: 15,
+    name: "RAHUL",
+    primaryPosition: "CB",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 9,
+    jersey: 1,
+    name: "KEERTHAN",
+    primaryPosition: "GK",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 10,
+    jersey: 21,
+    name: "SUVAN",
+    primaryPosition: "GK",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 11,
+    jersey: 19,
+    name: "MOKSHU",
+    primaryPosition: "CDM",
+    secondaryPositions: ["CAM"],
+  },
+
+  {
+    id: 12,
+    jersey: 8,
+    name: "BAGATH CHANDRA",
+    primaryPosition: "CAM",
+    secondaryPositions: ["RM"],
+  },
+
+  {
+    id: 13,
+    jersey: 25,
+    name: "PRANAY",
+    primaryPosition: "LB",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 14,
+    jersey: 10,
+    name: "ANURAG",
+    primaryPosition: "LM",
+    secondaryPositions: ["CAM", "RM"],
+  },
+
+  {
+    id: 15,
+    jersey: 17,
+    name: "BALA",
+    primaryPosition: "CAM",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 16,
+    jersey: 23,
+    name: "MELVIN",
+    primaryPosition: "LM",
+    secondaryPositions: ["RM"],
+  },
+
+  {
+    id: 17,
+    jersey: 16,
+    name: "RAHUL REDDY",
+    primaryPosition: "ST",
+    secondaryPositions: ["CB", "CAM", "GK"],
+  },
+
+  {
+    id: 18,
+    jersey: 5,
+    name: "YESHWANTH MADHANI",
+    primaryPosition: "CAM",
+    secondaryPositions: ["CDM", "ST"],
+  },
+
+  {
+    id: 19,
+    jersey: 9,
+    name: "SOHAN",
+    primaryPosition: "CDM",
+    secondaryPositions: ["LB", "ST", "LM"],
+  },
+
+  {
+    id: 20,
+    jersey: 33,
+    name: "ARAVIND",
+    primaryPosition: "RM/RB",
+    secondaryPositions: ["LM", "LB"],
+  },
+
+  {
+    id: 21,
+    jersey: 25,
+    name: "GANESH",
+    primaryPosition: "ST",
+    secondaryPositions: [],
+  },
+
+  {
+    id: 22,
+    jersey: 20,
+    name: "NIRANJAN",
+    primaryPosition: "LM/RM",
+    secondaryPositions: ["RM"],
+  },
+
+  {
+    id: 23,
+    jersey: 3,
+    name: "TONY",
+    primaryPosition: "CB",
+    secondaryPositions: ["ST", "LM", "RM", "CAM"],
+    captain: true,
+  },
+
+  {
+    id: 24,
+    jersey: 22,
+    name: "ARJUN",
+    primaryPosition: "RB",
+    secondaryPositions: ["RM", "ST"],
+  },
+
+  {
+    id: 25,
+    jersey: 7,
+    name: "MURARI",
+    primaryPosition: "CDM",
+    secondaryPositions: ["CAM", "ST"],
+  },
+
+  {
+    id: 26,
+    jersey: 11,
+    name: "SIDDHU",
+    primaryPosition: "ST",
+    secondaryPositions: ["CAM"],
+  },
+
+  {
+    id: 27,
+    jersey: 6,
+    name: "NOOR",
+    primaryPosition: "GK",
+    secondaryPositions: ["CB"],
+  },
+
+  {
+    id: 28,
+    jersey: 2,
+    name: "BHASKAR",
+    primaryPosition: "RB",
+    secondaryPositions: [],
+  },
+];
 // --- deterministic pseudo-random helpers ---
 function seeded(n: number): number {
   const x = Math.sin(n * 12.9898) * 43758.5453;
@@ -89,13 +290,28 @@ function between(seed: number, min: number, max: number): number {
 
 export function positionGroup(position: string): PositionGroup {
   const p = position.toUpperCase();
+
   if (p.includes("GK")) return "GK";
-  if (p.startsWith("ST") || p.includes("CF") || p.startsWith("LW") || p.startsWith("RW"))
+
+  if (
+    p.includes("ST") ||
+    p.includes("LW") ||
+    p.includes("RW") ||
+    p.includes("CF")
+  )
     return "FWD";
-  if (p.includes("CB") || p.includes("RB") || p.includes("LB")) return "DEF";
+
+  if (
+    p.includes("CB") ||
+    p.includes("LB") ||
+    p.includes("RB") ||
+    p.includes("LWB") ||
+    p.includes("RWB")
+  )
+    return "DEF";
+
   return "MID";
 }
-
 const GROUP_META: Record<
   PositionGroup,
   { goals: [number, number]; assists: [number, number]; heights: [number, number] }
@@ -108,7 +324,7 @@ const GROUP_META: Record<
 
 function enrich(entry: RosterEntry): Player {
   const s = entry.id;
-  const group = positionGroup(entry.position);
+  const group = positionGroup(entry.primaryPosition);
   const meta = GROUP_META[group];
 
   const matches = between(s + 1, 12, 24);
@@ -136,6 +352,9 @@ function enrich(entry: RosterEntry): Player {
 
   return {
     ...entry,
+
+    primaryPosition: entry.primaryPosition,
+    secondaryPositions: entry.secondaryPositions,
     group,
     foot: seeded(s + 10) > 0.72 ? "Left" : seeded(s + 11) > 0.9 ? "Both" : "Right",
     age: between(s + 12, 18, 23),

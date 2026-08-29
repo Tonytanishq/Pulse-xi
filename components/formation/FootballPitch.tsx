@@ -10,6 +10,8 @@ interface FootballPitchProps {
 
   lineup: Lineup;
 
+  selectedPlayer: Player | null;
+
   assignPlayer: (position: keyof Lineup) => void;
 
   assignDraggedPlayer: (
@@ -25,7 +27,10 @@ interface FootballPitchProps {
 export default function FootballPitch({
   formation,
   lineup,
+
+  selectedPlayer,
   assignPlayer,
+  
   assignDraggedPlayer,
   removePlayer,
   onPlayerSelect,
@@ -97,6 +102,7 @@ const positions = Object.entries(FORMATION_POSITIONS[formation] ?? {}).map(
           key={`${slot.key}-${lineup[slot.key as keyof Lineup]?.id ?? "empty"}`}
           position={slot.key as keyof Lineup}
           player={lineup[slot.key as keyof Lineup]}
+          selectedPlayer={selectedPlayer}
           top={slot.top}
           left={slot.left}
           onClick={() => assignPlayer(slot.key as keyof Lineup)}

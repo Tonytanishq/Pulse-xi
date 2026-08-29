@@ -76,7 +76,7 @@ export default function FormationPlayerCard({ player }: Props) {
 
         {/* Jersey + Position */}
         <p className="text-xs text-cyan-300">
-          #{player.jersey} • {player.position}
+          #{player.jersey} • {player.primaryPosition}
         </p>
 
         {/* Leadership Badges */}

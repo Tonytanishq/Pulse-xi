@@ -50,7 +50,7 @@ export default function PlayerBench({
                   </h3>
 
                   <p className="text-sm text-gray-400">
-                    #{player.jersey} • {player.position}
+                    #{player.jersey} • {player.primaryPosition}
                   </p>
 
                 </div>

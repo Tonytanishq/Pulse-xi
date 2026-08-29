@@ -1,7 +1,9 @@
 "use client";
 
 import { Bell, Menu, Search } from "lucide-react";
-import { captain } from "@/lib/players";
+import { players } from "@/lib/players";
+
+const captain = players.find((player) => player.captain);
 
 interface TopbarProps {
   title: string;

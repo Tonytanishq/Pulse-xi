@@ -40,7 +40,7 @@ export default function TopPerformers() {
               <p className="truncate text-sm font-semibold">
                 {p.name.charAt(0) + p.name.slice(1).toLowerCase()}
               </p>
-              <p className="text-[11px] text-gray-500">{p.position}</p>
+              <p className="text-[11px] text-gray-500">{p.primaryPosition}</p>
             </div>
             <div className="text-right">
               <p className="text-sm font-bold text-white">{p.goals}</p>

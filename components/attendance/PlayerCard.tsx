@@ -27,7 +27,7 @@ export default function PlayerCard({
   onViewProfile,
   index = 0,
 }: PlayerCardProps) {
-  const accent = GROUP_ACCENT[player.group ?? positionGroup(player.position)];
+  const accent = GROUP_ACCENT[player.group ?? positionGroup(player.primaryPosition)];
   const present = status === "present";
 
   return (
@@ -62,7 +62,7 @@ export default function PlayerCard({
             )}
           </h3>
           <p className="text-xs uppercase tracking-widest text-gray-400">
-            {player.position}
+            {player.primaryPosition}
           </p>
         </div>
 
