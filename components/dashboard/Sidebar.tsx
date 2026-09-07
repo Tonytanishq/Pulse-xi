@@ -8,6 +8,8 @@ import {
   Users,
   BarChart3,
   Settings,
+  LayoutGrid,
+  CalendarDays,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -21,6 +23,16 @@ export default function Sidebar() {
       name: "Attendance",
       href: "/attendance",
       icon: ClipboardCheck,
+    },
+    {
+      name: "Formation",
+      href: "/formation",
+      icon: LayoutGrid,
+    },
+    {
+      name: "Matchdays",
+      href: "/matchdays",
+      icon: CalendarDays,
     },
     {
       name: "Leaderboard",
@@ -52,7 +64,7 @@ export default function Sidebar() {
         </h1>
       </div>
 
-      <nav className="p-5 space-y-3">
+      <nav className="space-y-3 p-5">
         {menuItems.map((item) => {
           const Icon = item.icon;
 

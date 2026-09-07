@@ -6,6 +6,7 @@ import {
 import { Player } from "@/lib/players";
 import { validatePlayerPosition } from "@/lib/positionValidation";
 import { FORMATION_POSITIONS } from "@/lib/formations";
+import { useEffect, useState } from "react";
 
 export interface RecommendedXIPlayer {
   player: Player;

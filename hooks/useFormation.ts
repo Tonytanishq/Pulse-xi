@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Player } from "@/lib/players";
 import { remapFormation } from "@/lib/formationMapper";
 import { validatePlayerPosition } from "@/lib/positionValidation";
+import { SavedTactic } from "@/lib/savedTactics";
 
 export type Formation =
   | "4-3-3"
@@ -91,7 +92,7 @@ const EMPTY_LINEUP: Lineup = {
 
 export function useFormation() {
   const [formation, setFormationState] =
-  useState<Formation>("4-3-3");
+    useState<Formation>("4-3-3");
 
   const [selectedPlayer, setSelectedPlayer] =
     useState<Player | null>(null);
@@ -99,68 +100,166 @@ export function useFormation() {
   const [lineup, setLineup] =
     useState<Lineup>(EMPTY_LINEUP);
 
+  const [isXIConfirmed, setIsXIConfirmed] =
+    useState(false);
+
+  // ============================================================
+  // FORMATION + XI PERSISTENCE
+  // ============================================================
+
+  useEffect(() => {
+    const savedFormation =
+      localStorage.getItem("pulse-xi-formation");
+
+    const savedLineup =
+      localStorage.getItem("pulse-xi-lineup");
+
+    const savedXIConfirmed =
+      localStorage.getItem("pulse-xi-confirmed");
+
+    if (savedFormation) {
+      setFormationState(
+        savedFormation as Formation
+      );
+    }
+
+    if (savedLineup) {
+      try {
+        setLineup(
+          JSON.parse(savedLineup) as Lineup
+        );
+      } catch {
+        console.warn(
+          "Pulse XI: Failed to restore saved lineup."
+        );
+      }
+    }
+
+    if (savedXIConfirmed === "true") {
+      setIsXIConfirmed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pulse-xi-formation",
+      formation
+    );
+  }, [formation]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pulse-xi-lineup",
+      JSON.stringify(lineup)
+    );
+  }, [lineup]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pulse-xi-confirmed",
+      String(isXIConfirmed)
+    );
+  }, [isXIConfirmed]);
+
+  // ============================================================
+  // CAPTAIN
+  // ============================================================
+
   function setCaptain(player: Player) {
-  setLineup((prev) => {
-    const updated = { ...prev };
-
-    // Remove captain from everyone
-    (Object.keys(updated) as (keyof Lineup)[]).forEach((key) => {
-      if (updated[key]) {
-        updated[key] = {
-          ...updated[key]!,
-          captain: false,
-        };
-      }
-    });
-
-    // Assign new captain
-    const position = (
-      Object.keys(updated) as (keyof Lineup)[]
-    ).find((key) => updated[key]?.id === player.id);
-
-    if (position && updated[position]) {
-      updated[position] = {
-        ...updated[position]!,
-        captain: true,
-      };
+    // Locked XI → no changes allowed
+    if (isXIConfirmed) {
+      return;
     }
 
-    return updated;
-  });
-}
+    setLineup((prev) => {
+      const updated = { ...prev };
 
-function setViceCaptain(player: Player) {
-  setLineup((prev) => {
-    const updated = { ...prev };
+      // Remove captain from everyone
+      (Object.keys(updated) as (keyof Lineup)[]).forEach(
+        (key) => {
+          if (updated[key]) {
+            updated[key] = {
+              ...updated[key]!,
+              captain: false,
+            };
+          }
+        }
+      );
 
-    // Remove vice captain from everyone
-    (Object.keys(updated) as (keyof Lineup)[]).forEach((key) => {
-      if (updated[key]) {
-        updated[key] = {
-          ...updated[key]!,
-          viceCaptain: false,
+      // Assign new captain
+      const position = (
+        Object.keys(updated) as (keyof Lineup)[]
+      ).find(
+        (key) => updated[key]?.id === player.id
+      );
+
+      if (position && updated[position]) {
+        updated[position] = {
+          ...updated[position]!,
+          captain: true,
         };
       }
+
+      return updated;
     });
+  }
 
-    // Assign new vice captain
-    const position = (
-      Object.keys(updated) as (keyof Lineup)[]
-    ).find((key) => updated[key]?.id === player.id);
+  // ============================================================
+  // VICE CAPTAIN
+  // ============================================================
 
-    if (position && updated[position]) {
-      updated[position] = {
-        ...updated[position]!,
-        viceCaptain: true,
-      };
+  function setViceCaptain(player: Player) {
+    // Locked XI → no changes allowed
+    if (isXIConfirmed) {
+      return;
     }
 
-    return updated;
-  });
-}
+    setLineup((prev) => {
+      const updated = { ...prev };
 
-    function assignPlayer(position: keyof Lineup) {
-    if (!selectedPlayer) return;
+      // Remove vice captain from everyone
+      (Object.keys(updated) as (keyof Lineup)[]).forEach(
+        (key) => {
+          if (updated[key]) {
+            updated[key] = {
+              ...updated[key]!,
+              viceCaptain: false,
+            };
+          }
+        }
+      );
+
+      // Assign new vice captain
+      const position = (
+        Object.keys(updated) as (keyof Lineup)[]
+      ).find(
+        (key) => updated[key]?.id === player.id
+      );
+
+      if (position && updated[position]) {
+        updated[position] = {
+          ...updated[position]!,
+          viceCaptain: true,
+        };
+      }
+
+      return updated;
+    });
+  }
+
+  // ============================================================
+  // ASSIGN PLAYER
+  // ============================================================
+
+  function assignPlayer(position: keyof Lineup) {
+    // Locked XI → no editing
+    if (isXIConfirmed) {
+      return;
+    }
+
+    if (!selectedPlayer) {
+      return;
+    }
 
     const validation = validatePlayerPosition(
       selectedPlayer,
@@ -180,10 +279,19 @@ function setViceCaptain(player: Player) {
     setSelectedPlayer(null);
   }
 
+  // ============================================================
+  // DRAG / DROP PLAYER
+  // ============================================================
+
   function assignDraggedPlayer(
     position: keyof Lineup,
     player: Player
   ) {
+    // Locked XI → no drag/drop changes
+    if (isXIConfirmed) {
+      return;
+    }
+
     const validation = validatePlayerPosition(
       player,
       position
@@ -197,14 +305,14 @@ function setViceCaptain(player: Player) {
     setLineup((prev) => {
       const updated = { ...prev };
 
-      // Find where the dragged player currently is
+      // Find where dragged player currently is
       const oldPosition = (
         Object.keys(updated) as (keyof Lineup)[]
       ).find(
         (key) => updated[key]?.id === player.id
       );
 
-      // Player already occupying target position
+      // Player occupying target position
       const targetPlayer = updated[position];
 
       // Move dragged player
@@ -219,26 +327,93 @@ function setViceCaptain(player: Player) {
     });
   }
 
+  // ============================================================
+  // REMOVE PLAYER
+  // ============================================================
+
   function removePlayer(position: keyof Lineup) {
+    // Locked XI → no removal
+    if (isXIConfirmed) {
+      return;
+    }
+
     setLineup((prev) => ({
       ...prev,
       [position]: null,
     }));
   }
 
-  function setFormation(newFormation: Formation) {
-  setLineup((prev) =>
-    remapFormation(prev, formation, newFormation)
-  );
+  // ============================================================
+  // CHANGE FORMATION
+  // ============================================================
 
-  setFormationState(newFormation);
-}
+  function setFormation(newFormation: Formation) {
+    // Locked XI → formation cannot change
+    if (isXIConfirmed) {
+      return;
+    }
+
+    setLineup((prev) =>
+      remapFormation(
+        prev,
+        formation,
+        newFormation
+      )
+    );
+
+    setFormationState(newFormation);
+  }
+
+  // ============================================================
+  // LOAD SAVED TACTIC
+  // ============================================================
+
+  function loadSavedTactic(tactic: SavedTactic) {
+    // Locked XI → cannot replace the confirmed XI
+    if (isXIConfirmed) {
+      return;
+    }
+
+    setFormationState(tactic.formation);
+    setLineup(tactic.lineup);
+    setSelectedPlayer(null);
+  }
+
+  // ============================================================
+  // CONFIRM STARTING XI
+  // ============================================================
+
+  function confirmStartingXI() {
+    setSelectedPlayer(null);
+    setIsXIConfirmed(true);
+  }
+
+  // ============================================================
+  // UNLOCK STARTING XI
+  // ============================================================
+
+  function unlockStartingXI() {
+    setIsXIConfirmed(false);
+  }
+
+  // ============================================================
+  // RESET FORMATION
+  // ============================================================
 
   function resetFormation() {
-  setLineup(EMPTY_LINEUP);
-  setSelectedPlayer(null);
-  setFormationState("4-3-3");
-}
+    // Locked XI → cannot reset
+    if (isXIConfirmed) {
+      return;
+    }
+
+    setLineup(EMPTY_LINEUP);
+    setSelectedPlayer(null);
+    setFormationState("4-3-3");
+  }
+
+  // ============================================================
+  // RETURN
+  // ============================================================
 
   return {
     formation,
@@ -255,6 +430,12 @@ function setViceCaptain(player: Player) {
 
     setCaptain,
     setViceCaptain,
+
+    loadSavedTactic,
+
+    confirmStartingXI,
+    unlockStartingXI,
+    isXIConfirmed,
 
     resetFormation,
   };

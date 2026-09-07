@@ -4,13 +4,14 @@
 
 import {
   LayoutDashboard,
-  ClipboardCheck,
-  Users,
-  LayoutGrid,
-  Trophy,
-  BarChart3,
-  Radio,
-  Settings,
+ClipboardCheck,
+Users,
+LayoutGrid,
+CalendarDays,
+Trophy,
+BarChart3,
+Radio,
+Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +36,7 @@ export const NAV: NavItem[] = [
   { name: "Attendance", href: "/attendance", icon: ClipboardCheck },
   { name: "Squad", href: "/admin", icon: Users },
   { name: "Formation", href: "/formation", icon: LayoutGrid },
+  { name: "Matchdays", href: "/matchdays", icon: CalendarDays },
   { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { name: "Analytics", href: "/analytics", icon: BarChart3, soon: true },
   { name: "Team Hub", href: "/hub", icon: Radio, soon: true },
