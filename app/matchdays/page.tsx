@@ -72,6 +72,20 @@ export default function MatchdaysPage() {
       matchday.status === "COMPLETED"
   );
 
+  const historyMatchdays = useMemo(() => {
+    return [...completedMatchdays].sort((a, b) => {
+      const dateA = new Date(
+        `${a.date}T${a.kickoff || "00:00"}`
+      ).getTime();
+
+      const dateB = new Date(
+        `${b.date}T${b.kickoff || "00:00"}`
+      ).getTime();
+
+      return dateB - dateA;
+    });
+  }, [completedMatchdays]);
+
   const totalMatches = matchdays.length;
 
   const completedMatches =
@@ -989,6 +1003,184 @@ export default function MatchdaysPage() {
     );
   }
 
+  function renderHistoryCard(matchday: Matchday) {
+    const startingXI = Object.values(matchday.lineup).filter(Boolean).length;
+    const benchCount = matchday.substitutes?.length ?? 0;
+
+    const hasResult =
+      typeof matchday.bvritScore === "number" &&
+      typeof matchday.opponentScore === "number";
+
+    const goalDifference = hasResult
+      ? (matchday.bvritScore ?? 0) -
+        (matchday.opponentScore ?? 0)
+      : null;
+
+    return (
+      <article
+        key={matchday.id}
+        className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-cyan-400/20 hover:bg-white/[0.04]"
+      >
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${getResultClasses(
+                  matchday.result
+                )}`}
+              >
+                {getResultLabel(matchday.result)}
+              </span>
+
+              <span className="rounded-full border border-emerald-400/10 bg-emerald-400/[0.05] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300/70">
+                Completed
+              </span>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <h3 className="text-xl font-black tracking-tight text-white">
+                BVRIT FC
+              </h3>
+
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/25">
+                vs
+              </span>
+
+              <h3 className="text-xl font-black tracking-tight text-white">
+                {matchday.opponent}
+              </h3>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-white/40">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {matchday.date}
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <Clock3 className="h-3.5 w-3.5" />
+                {matchday.kickoff}
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {matchday.venue === "HOME" ? "Home" : "Away"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-5 lg:shrink-0">
+            <div className="min-w-24 text-center">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/25">
+                Final Score
+              </p>
+
+              <p className="mt-1 text-3xl font-black tracking-tight text-white">
+                {hasResult
+                  ? `${matchday.bvritScore} - ${matchday.opponentScore}`
+                  : "—"}
+              </p>
+            </div>
+
+            <div className="hidden h-12 w-px bg-white/10 sm:block" />
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/25">
+                  XI
+                </p>
+
+                <p className="mt-1 text-sm font-black text-white">
+                  {startingXI}/11
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/25">
+                  Bench
+                </p>
+
+                <p className="mt-1 text-sm font-black text-white">
+                  {benchCount}/7
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/25">
+                  Shape
+                </p>
+
+                <p className="mt-1 text-sm font-black text-white">
+                  {matchday.formation}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            {hasResult ? (
+              <>
+                <span className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-bold text-white/50">
+                  GF {matchday.bvritScore}
+                </span>
+
+                <span className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-bold text-white/50">
+                  GA {matchday.opponentScore}
+                </span>
+
+                <span className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-bold text-white/50">
+                  GD {goalDifference !== null && goalDifference > 0 ? "+" : ""}
+                  {goalDifference}
+                </span>
+              </>
+            ) : (
+              <span className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-bold text-white/35">
+                Score not recorded
+              </span>
+            )}
+
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${
+                matchday.confirmed
+                  ? "border-emerald-400/15 bg-emerald-400/[0.06] text-emerald-300"
+                  : "border-amber-400/15 bg-amber-400/[0.06] text-amber-300"
+              }`}
+            >
+              {matchday.confirmed ? (
+                <LockKeyhole className="h-3.5 w-3.5" />
+              ) : (
+                <AlertTriangle className="h-3.5 w-3.5" />
+              )}
+
+              {matchday.confirmed ? "XI Locked" : "XI Unlocked"}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/formation"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-xs font-black uppercase tracking-[0.12em] text-white/60 transition hover:bg-white/[0.07] hover:text-white"
+            >
+              View Formation
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => handleOpenResultEditor(matchday)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/15 bg-cyan-400/[0.05] px-4 py-2.5 text-xs font-black uppercase tracking-[0.12em] text-cyan-300 transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.1] hover:text-white"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              {hasResult ? "Edit Result" : "Record Result"}
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <AppShell
       title="Matchdays"
@@ -1217,11 +1409,11 @@ export default function MatchdaysPage() {
           </span>
         </div>
 
-        {completedMatchdays.length >
+        {historyMatchdays.length >
         0 ? (
-          <div className="mt-6 space-y-5">
-            {completedMatchdays.map(
-              renderMatchdayCard
+          <div className="mt-6 space-y-4">
+            {historyMatchdays.map(
+              renderHistoryCard
             )}
           </div>
         ) : (
