@@ -7,7 +7,7 @@ import FormationToolbar from "./FormationToolbar";
 import PlayerBench from "./PlayerBench";
 import MatchdayPanel from "./MatchdayPanel";
 
-import { players } from "@/lib/players";
+import { players, Player } from "@/lib/players";
 import { useFormation } from "@/hooks/useFormation";
 import { LayoutGroup } from "framer-motion";
 
@@ -28,6 +28,8 @@ import {
   loadMatchday,
   deleteMatchday,
   updateMatchdayLineup,
+  updateMatchdaySubstitutes,
+  updateMatchdayConfirmation,
 } from "@/lib/matchday";
 
 export default function FootballWorkspace() {
@@ -57,6 +59,9 @@ export default function FootballWorkspace() {
   const [matchday, setMatchday] =
     useState<Matchday | null>(null);
 
+  const [substitutes, setSubstitutes] =
+    useState<Player[]>([]);
+
   /*
    * ============================================================
    * RESTORE SAVED MATCHDAY
@@ -68,8 +73,18 @@ export default function FootballWorkspace() {
 
     if (savedMatchday) {
       setMatchday(savedMatchday);
+
+      setSubstitutes(
+        savedMatchday.substitutes ?? []
+      );
     }
   }, []);
+
+  /*
+   * ============================================================
+   * FORMATION INTELLIGENCE
+   * ============================================================
+   */
 
   const intelligence = analyzeFormation(
     lineup,
@@ -116,6 +131,158 @@ export default function FootballWorkspace() {
 
   /*
    * ============================================================
+   * STARTING XI HELPERS
+   * ============================================================
+   */
+
+  function getStartingXIIds(): Set<number> {
+    return new Set(
+      Object.values(lineup)
+        .filter(
+          (player): player is Player =>
+            player !== null
+        )
+        .map((player) => player.id)
+    );
+  }
+
+  /*
+   * ============================================================
+   * SYNC SUBSTITUTES
+   * ============================================================
+   */
+
+  function syncSubstitutesWithLineup(
+    currentSubstitutes: Player[]
+  ) {
+    const startingXIIds =
+      getStartingXIIds();
+
+    const cleanedSubstitutes =
+      currentSubstitutes.filter(
+        (player) =>
+          !startingXIIds.has(player.id)
+      );
+
+    setSubstitutes(
+      cleanedSubstitutes
+    );
+
+    if (matchday) {
+      const updatedMatchday =
+        updateMatchdaySubstitutes(
+          cleanedSubstitutes
+        );
+
+      if (updatedMatchday) {
+        setMatchday(updatedMatchday);
+      }
+    }
+
+    return cleanedSubstitutes;
+  }
+
+  /*
+   * ============================================================
+   * ASSIGN PLAYER TO STARTING XI
+   *
+   * Wrapper around useFormation so that a player who was
+   * previously selected as a substitute is automatically
+   * removed from the bench.
+   * ============================================================
+   */
+
+  function handleAssignPlayer(
+    position: Parameters<
+      typeof assignPlayer
+    >[0]
+  ) {
+    if (!selectedPlayer) {
+      return;
+    }
+
+    const playerId =
+      selectedPlayer.id;
+
+    const updatedSubstitutes =
+      substitutes.filter(
+        (player) =>
+          player.id !== playerId
+      );
+
+    assignPlayer(position);
+
+    if (
+      updatedSubstitutes.length !==
+      substitutes.length
+    ) {
+      setSubstitutes(
+        updatedSubstitutes
+      );
+
+      if (matchday) {
+        const updatedMatchday =
+          updateMatchdaySubstitutes(
+            updatedSubstitutes
+          );
+
+        if (updatedMatchday) {
+          setMatchday(
+            updatedMatchday
+          );
+        }
+      }
+    }
+  }
+
+  /*
+   * ============================================================
+   * DRAG PLAYER INTO STARTING XI
+   * ============================================================
+   */
+
+  function handleAssignDraggedPlayer(
+    position: Parameters<
+      typeof assignDraggedPlayer
+    >[0],
+    player: Player
+  ) {
+    const updatedSubstitutes =
+      substitutes.filter(
+        (substitute) =>
+          substitute.id !== player.id
+      );
+
+    assignDraggedPlayer(
+      position,
+      player
+    );
+
+    if (
+      updatedSubstitutes.length !==
+      substitutes.length
+    ) {
+      setSubstitutes(
+        updatedSubstitutes
+      );
+
+      if (matchday) {
+        const updatedMatchday =
+          updateMatchdaySubstitutes(
+            updatedSubstitutes
+          );
+
+        if (updatedMatchday) {
+          setMatchday(
+            updatedMatchday
+          );
+        }
+      }
+    }
+  }
+
+  /*
+   * ============================================================
    * CREATE MATCHDAY
    * ============================================================
    */
@@ -126,22 +293,139 @@ export default function FootballWorkspace() {
     kickoff: string,
     venue: MatchVenue
   ) {
-    const newMatchday = createMatchday(
-      opponent,
-      date,
-      kickoff,
-      venue,
-      formation,
-      lineup
+    const newMatchday =
+      createMatchday(
+        opponent,
+        date,
+        kickoff,
+        venue,
+        formation,
+        lineup
+      );
+
+    const matchdayWithSubstitutes: Matchday = {
+      ...newMatchday,
+      substitutes: [...substitutes],
+      confirmed: isXIConfirmed,
+    };
+
+    setMatchday(
+      matchdayWithSubstitutes
     );
 
-    setMatchday(newMatchday);
+    setSubstitutes([
+      ...substitutes,
+    ]);
 
-    saveMatchday(newMatchday);
+    saveMatchday(
+      matchdayWithSubstitutes
+    );
 
     window.alert(
       `📋 Matchday created against ${newMatchday.opponent}!`
     );
+  }
+
+  /*
+   * ============================================================
+   * SUBSTITUTE MANAGEMENT
+   * ============================================================
+   */
+
+  function handleToggleSubstitute(
+    player: Player
+  ) {
+    const startingXIIds =
+      getStartingXIIds();
+
+    /*
+     * A Starting XI player can never
+     * simultaneously be a substitute.
+     */
+    if (
+      startingXIIds.has(player.id)
+    ) {
+      window.alert(
+        "⚠️ A Starting XI player cannot also be a substitute."
+      );
+
+      return;
+    }
+
+    const alreadySelected =
+      substitutes.some(
+        (substitute) =>
+          substitute.id === player.id
+      );
+
+    /*
+     * REMOVE SUBSTITUTE
+     */
+
+    if (alreadySelected) {
+      const updatedSubstitutes =
+        substitutes.filter(
+          (substitute) =>
+            substitute.id !== player.id
+        );
+
+      setSubstitutes(
+        updatedSubstitutes
+      );
+
+      if (matchday) {
+        const updatedMatchday =
+          updateMatchdaySubstitutes(
+            updatedSubstitutes
+          );
+
+        if (updatedMatchday) {
+          setMatchday(
+            updatedMatchday
+          );
+        }
+      }
+
+      return;
+    }
+
+    /*
+     * MAXIMUM 7 SUBSTITUTES
+     */
+
+    if (substitutes.length >= 7) {
+      window.alert(
+        "🪑 Maximum 7 substitutes allowed."
+      );
+
+      return;
+    }
+
+    /*
+     * ADD SUBSTITUTE
+     */
+
+    const updatedSubstitutes = [
+      ...substitutes,
+      player,
+    ];
+
+    setSubstitutes(
+      updatedSubstitutes
+    );
+
+    if (matchday) {
+      const updatedMatchday =
+        updateMatchdaySubstitutes(
+          updatedSubstitutes
+        );
+
+      if (updatedMatchday) {
+        setMatchday(
+          updatedMatchday
+        );
+      }
+    }
   }
 
   /*
@@ -151,16 +435,19 @@ export default function FootballWorkspace() {
    */
 
   function handleDeleteMatchday() {
-    const confirmed = window.confirm(
-      "Delete the current matchday?"
-    );
+    const confirmed =
+      window.confirm(
+        "Delete the current matchday?"
+      );
 
     if (!confirmed) {
       return;
     }
 
     deleteMatchday();
+
     setMatchday(null);
+    setSubstitutes([]);
 
     window.alert(
       "🗑️ Current matchday deleted."
@@ -174,12 +461,83 @@ export default function FootballWorkspace() {
    */
 
   function handleStartingXIAction() {
+    /*
+     * ==========================================================
+     * UNLOCK
+     * ==========================================================
+     */
+
     if (isXIConfirmed) {
       unlockStartingXI();
+
+      /*
+       * Keep Matchday confirmation state
+       * synchronized with Formation state.
+       */
+
+      const updatedMatchday =
+        updateMatchdayConfirmation(
+          false
+        );
+
+      if (updatedMatchday) {
+        setMatchday(
+          updatedMatchday
+        );
+      }
+
       return;
     }
 
-    confirmStartingXI();
+    /*
+     * ==========================================================
+     * CONFIRM
+     * ==========================================================
+     */
+
+    const confirmed =
+      confirmStartingXI();
+
+    /*
+     * confirmStartingXI() returns false
+     * when the XI is not exactly 11 players.
+     */
+
+    if (!confirmed) {
+      return;
+    }
+
+    /*
+     * Remove any accidental substitute
+     * overlap before saving the XI.
+     */
+
+    const startingXIIds =
+      new Set(
+        Object.values(lineup)
+          .filter(
+            (player): player is Player =>
+              player !== null
+          )
+          .map((player) => player.id)
+      );
+
+    const cleanedSubstitutes =
+      substitutes.filter(
+        (player) =>
+          !startingXIIds.has(
+            player.id
+          )
+      );
+
+    setSubstitutes(
+      cleanedSubstitutes
+    );
+
+    /*
+     * Save the exact current Formation
+     * snapshot into the Matchday.
+     */
 
     if (matchday) {
       const updatedMatchday =
@@ -189,17 +547,36 @@ export default function FootballWorkspace() {
         );
 
       if (updatedMatchday) {
-        setMatchday(updatedMatchday);
+        const syncedMatchday: Matchday = {
+          ...updatedMatchday,
+          substitutes:
+            cleanedSubstitutes,
+          confirmed: true,
+        };
+
+        saveMatchday(
+          syncedMatchday
+        );
+
+        setMatchday(
+          syncedMatchday
+        );
       }
     }
   }
 
+  /*
+   * ============================================================
+   * RENDER
+   * ============================================================
+   */
+
   return (
     <div className="min-h-screen bg-[#050816] text-white">
 
-      {/* ============================================================
+      {/* ========================================================
           HEADER
-      ============================================================ */}
+      ======================================================== */}
 
       <div className="border-b border-cyan-500/20 px-8 py-6">
         <h1 className="text-4xl font-black tracking-wide">
@@ -211,9 +588,9 @@ export default function FootballWorkspace() {
         </p>
       </div>
 
-      {/* ============================================================
+      {/* ========================================================
           FORMATION TOOLBAR
-      ============================================================ */}
+      ======================================================== */}
 
       <FormationToolbar
         formation={formation}
@@ -221,60 +598,78 @@ export default function FootballWorkspace() {
         onReset={resetFormation}
       />
 
-      {/* ============================================================
+      {/* ========================================================
           MAIN WORKSPACE
-      ============================================================ */}
+      ======================================================== */}
 
       <div className="grid grid-cols-[360px_1fr_320px] gap-6 p-6">
 
-        {/* ========================================================
+        {/* ======================================================
             LEFT — PLAYER BENCH
-        ======================================================== */}
+        ====================================================== */}
 
         <div className="flex flex-col gap-6">
 
           <PlayerBench
             players={players}
+            startingXI={Object.values(lineup).filter(
+              (player): player is Player =>
+                player !== null
+            )}
+            substitutes={substitutes}
             selectedPlayer={selectedPlayer}
             onSelect={setSelectedPlayer}
+            onToggleSubstitute={
+              handleToggleSubstitute
+            }
           />
 
-          {/* ======================================================
+          {/* ==================================================
               MATCHDAY SETUP
-          ====================================================== */}
+          ================================================== */}
 
           <MatchdayPanel
             formation={formation}
-            onCreateMatchday={handleCreateMatchday}
+            onCreateMatchday={
+              handleCreateMatchday
+            }
           />
 
         </div>
 
-        {/* ========================================================
+        {/* ======================================================
             CENTER — FOOTBALL PITCH
-        ======================================================== */}
+        ====================================================== */}
 
         <LayoutGroup>
           <FootballPitch
             formation={formation}
             lineup={lineup}
             selectedPlayer={selectedPlayer}
-            assignPlayer={assignPlayer}
-            assignDraggedPlayer={assignDraggedPlayer}
-            removePlayer={removePlayer}
-            onPlayerSelect={setSelectedPlayer}
+            assignPlayer={
+              handleAssignPlayer
+            }
+            assignDraggedPlayer={
+              handleAssignDraggedPlayer
+            }
+            removePlayer={
+              removePlayer
+            }
+            onPlayerSelect={
+              setSelectedPlayer
+            }
           />
         </LayoutGroup>
 
-        {/* ========================================================
+        {/* ======================================================
             RIGHT — MANAGEMENT PANEL
-        ======================================================== */}
+        ====================================================== */}
 
         <div className="flex flex-col gap-6">
 
-          {/* ======================================================
+          {/* ==================================================
               CURRENT MATCHDAY
-          ====================================================== */}
+          ================================================== */}
 
           {matchday && (
             <div className="rounded-3xl border border-purple-400/20 bg-purple-500/5 p-5 shadow-xl">
@@ -324,16 +719,29 @@ export default function FootballWorkspace() {
                 </div>
 
                 <div className="flex justify-between">
+                  <span>Substitutes</span>
+
+                  <span className="font-bold text-emerald-300">
+                    {substitutes.length} / 7
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
                   <span>Status</span>
 
                   <span
-                    className={`font-black ${
-                      matchday.status === "UPCOMING"
-                        ? "text-cyan-300"
-                        : matchday.status === "LIVE"
-                        ? "text-red-300"
-                        : "text-emerald-300"
-                    }`}
+                    className={`
+                      font-black
+                      ${
+                        matchday.status ===
+                        "UPCOMING"
+                          ? "text-cyan-300"
+                          : matchday.status ===
+                              "LIVE"
+                            ? "text-red-300"
+                            : "text-emerald-300"
+                      }
+                    `}
                   >
                     {matchday.status}
                   </span>
@@ -353,7 +761,9 @@ export default function FootballWorkspace() {
 
               <button
                 type="button"
-                onClick={handleDeleteMatchday}
+                onClick={
+                  handleDeleteMatchday
+                }
                 className="
                   mt-3
                   w-full
@@ -379,21 +789,25 @@ export default function FootballWorkspace() {
             </div>
           )}
 
-          {/* ======================================================
+          {/* ==================================================
               SAVED TACTICS
-          ====================================================== */}
+          ================================================== */}
 
           <SavedTacticsPanel
-            onLoadTactic={loadSavedTactic}
+            onLoadTactic={
+              loadSavedTactic
+            }
           />
 
-          {/* ======================================================
+          {/* ==================================================
               CONFIRM / EDIT STARTING XI
-          ====================================================== */}
+          ================================================== */}
 
           <button
             type="button"
-            onClick={handleStartingXIAction}
+            onClick={
+              handleStartingXIAction
+            }
             className="
               w-full
               rounded-2xl
@@ -418,13 +832,15 @@ export default function FootballWorkspace() {
               : "🔒 CONFIRM STARTING XI"}
           </button>
 
-          {/* ======================================================
+          {/* ==================================================
               SAVE CURRENT XI
-          ====================================================== */}
+          ================================================== */}
 
           <button
             type="button"
-            onClick={handleSaveTactic}
+            onClick={
+              handleSaveTactic
+            }
             className="
               w-full
               rounded-2xl
@@ -447,16 +863,16 @@ export default function FootballWorkspace() {
             💾 SAVE CURRENT XI
           </button>
 
-          {/* ======================================================
+          {/* ==================================================
               BUILD BEST XI
-          ====================================================== */}
+          ================================================== */}
 
           <button
             type="button"
             onClick={() => {
               recommendedXI.players.forEach(
                 (selection) => {
-                  assignDraggedPlayer(
+                  handleAssignDraggedPlayer(
                     selection.position,
                     selection.player
                   );
@@ -485,29 +901,37 @@ export default function FootballWorkspace() {
             🧠 BUILD BEST XI
           </button>
 
-          {/* ======================================================
+          {/* ==================================================
               PLAYER DETAILS
-          ====================================================== */}
+          ================================================== */}
 
           <PlayerDetails
             player={
               selectedPlayer
-                ? Object.values(lineup).find(
+                ? Object.values(
+                    lineup
+                  ).find(
                     (p) =>
-                      p?.id === selectedPlayer.id
-                  ) ?? selectedPlayer
+                      p?.id ===
+                      selectedPlayer.id
+                  ) ??
+                  selectedPlayer
                 : null
             }
             onCaptain={setCaptain}
-            onViceCaptain={setViceCaptain}
+            onViceCaptain={
+              setViceCaptain
+            }
           />
 
-          {/* ======================================================
+          {/* ==================================================
               FORMATION INTELLIGENCE
-          ====================================================== */}
+          ================================================== */}
 
           <FormationIntelligencePanel
-            intelligence={intelligence}
+            intelligence={
+              intelligence
+            }
             recommendations={
               recommendations.recommendations
             }
@@ -515,7 +939,7 @@ export default function FootballWorkspace() {
               position,
               player
             ) => {
-              assignDraggedPlayer(
+              handleAssignDraggedPlayer(
                 position,
                 player
               );

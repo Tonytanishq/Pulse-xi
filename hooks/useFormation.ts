@@ -109,13 +109,19 @@ export function useFormation() {
 
   useEffect(() => {
     const savedFormation =
-      localStorage.getItem("pulse-xi-formation");
+      localStorage.getItem(
+        "pulse-xi-formation"
+      );
 
     const savedLineup =
-      localStorage.getItem("pulse-xi-lineup");
+      localStorage.getItem(
+        "pulse-xi-lineup"
+      );
 
     const savedXIConfirmed =
-      localStorage.getItem("pulse-xi-confirmed");
+      localStorage.getItem(
+        "pulse-xi-confirmed"
+      );
 
     if (savedFormation) {
       setFormationState(
@@ -162,11 +168,33 @@ export function useFormation() {
   }, [isXIConfirmed]);
 
   // ============================================================
+  // HELPERS
+  // ============================================================
+
+  function getAssignedPlayers(
+    currentLineup: Lineup = lineup
+  ): Player[] {
+    return Object.values(currentLineup).filter(
+      (player): player is Player =>
+        player !== null
+    );
+  }
+
+  function getStartingXIPlayerIds(
+    currentLineup: Lineup = lineup
+  ): Set<number> {
+    return new Set(
+      getAssignedPlayers(currentLineup).map(
+        (player) => player.id
+      )
+    );
+  }
+
+  // ============================================================
   // CAPTAIN
   // ============================================================
 
   function setCaptain(player: Player) {
-    // Locked XI → no changes allowed
     if (isXIConfirmed) {
       return;
     }
@@ -174,23 +202,22 @@ export function useFormation() {
     setLineup((prev) => {
       const updated = { ...prev };
 
-      // Remove captain from everyone
-      (Object.keys(updated) as (keyof Lineup)[]).forEach(
-        (key) => {
-          if (updated[key]) {
-            updated[key] = {
-              ...updated[key]!,
-              captain: false,
-            };
-          }
+      (
+        Object.keys(updated) as (keyof Lineup)[]
+      ).forEach((key) => {
+        if (updated[key]) {
+          updated[key] = {
+            ...updated[key]!,
+            captain: false,
+          };
         }
-      );
+      });
 
-      // Assign new captain
       const position = (
         Object.keys(updated) as (keyof Lineup)[]
       ).find(
-        (key) => updated[key]?.id === player.id
+        (key) =>
+          updated[key]?.id === player.id
       );
 
       if (position && updated[position]) {
@@ -209,7 +236,6 @@ export function useFormation() {
   // ============================================================
 
   function setViceCaptain(player: Player) {
-    // Locked XI → no changes allowed
     if (isXIConfirmed) {
       return;
     }
@@ -217,23 +243,22 @@ export function useFormation() {
     setLineup((prev) => {
       const updated = { ...prev };
 
-      // Remove vice captain from everyone
-      (Object.keys(updated) as (keyof Lineup)[]).forEach(
-        (key) => {
-          if (updated[key]) {
-            updated[key] = {
-              ...updated[key]!,
-              viceCaptain: false,
-            };
-          }
+      (
+        Object.keys(updated) as (keyof Lineup)[]
+      ).forEach((key) => {
+        if (updated[key]) {
+          updated[key] = {
+            ...updated[key]!,
+            viceCaptain: false,
+          };
         }
-      );
+      });
 
-      // Assign new vice captain
       const position = (
         Object.keys(updated) as (keyof Lineup)[]
       ).find(
-        (key) => updated[key]?.id === player.id
+        (key) =>
+          updated[key]?.id === player.id
       );
 
       if (position && updated[position]) {
@@ -251,8 +276,9 @@ export function useFormation() {
   // ASSIGN PLAYER
   // ============================================================
 
-  function assignPlayer(position: keyof Lineup) {
-    // Locked XI → no editing
+  function assignPlayer(
+    position: keyof Lineup
+  ) {
     if (isXIConfirmed) {
       return;
     }
@@ -261,20 +287,40 @@ export function useFormation() {
       return;
     }
 
-    const validation = validatePlayerPosition(
-      selectedPlayer,
-      position
-    );
+    const validation =
+      validatePlayerPosition(
+        selectedPlayer,
+        position
+      );
 
-    // Invalid position → do not assign
     if (validation === "invalid") {
       return;
     }
 
-    setLineup((prev) => ({
-      ...prev,
-      [position]: selectedPlayer,
-    }));
+    setLineup((prev) => {
+      const updated = { ...prev };
+
+      const existingPosition = (
+        Object.keys(updated) as (keyof Lineup)[]
+      ).find(
+        (key) =>
+          updated[key]?.id ===
+          selectedPlayer.id
+      );
+
+      // Prevent the same player from occupying
+      // multiple Starting XI positions.
+      if (
+        existingPosition &&
+        existingPosition !== position
+      ) {
+        return updated;
+      }
+
+      updated[position] = selectedPlayer;
+
+      return updated;
+    });
 
     setSelectedPlayer(null);
   }
@@ -287,17 +333,16 @@ export function useFormation() {
     position: keyof Lineup,
     player: Player
   ) {
-    // Locked XI → no drag/drop changes
     if (isXIConfirmed) {
       return;
     }
 
-    const validation = validatePlayerPosition(
-      player,
-      position
-    );
+    const validation =
+      validatePlayerPosition(
+        player,
+        position
+      );
 
-    // Invalid position → do not allow the drop
     if (validation === "invalid") {
       return;
     }
@@ -305,34 +350,39 @@ export function useFormation() {
     setLineup((prev) => {
       const updated = { ...prev };
 
-      // Find where dragged player currently is
       const oldPosition = (
         Object.keys(updated) as (keyof Lineup)[]
       ).find(
-        (key) => updated[key]?.id === player.id
+        (key) =>
+          updated[key]?.id === player.id
       );
 
-      // Player occupying target position
-      const targetPlayer = updated[position];
+      const targetPlayer =
+        updated[position];
 
-      // Move dragged player
       updated[position] = player;
 
-      // Swap players if dragged player was already on pitch
-      if (oldPosition) {
-        updated[oldPosition] = targetPlayer;
+      if (
+        oldPosition &&
+        oldPosition !== position
+      ) {
+        updated[oldPosition] =
+          targetPlayer;
       }
 
       return updated;
     });
+
+    setSelectedPlayer(null);
   }
 
   // ============================================================
   // REMOVE PLAYER
   // ============================================================
 
-  function removePlayer(position: keyof Lineup) {
-    // Locked XI → no removal
+  function removePlayer(
+    position: keyof Lineup
+  ) {
     if (isXIConfirmed) {
       return;
     }
@@ -347,8 +397,9 @@ export function useFormation() {
   // CHANGE FORMATION
   // ============================================================
 
-  function setFormation(newFormation: Formation) {
-    // Locked XI → formation cannot change
+  function setFormation(
+    newFormation: Formation
+  ) {
     if (isXIConfirmed) {
       return;
     }
@@ -368,14 +419,25 @@ export function useFormation() {
   // LOAD SAVED TACTIC
   // ============================================================
 
-  function loadSavedTactic(tactic: SavedTactic) {
-    // Locked XI → cannot replace the confirmed XI
-    if (isXIConfirmed) {
-      return;
-    }
+  function loadSavedTactic(
+    tactic: SavedTactic
+  ) {
+    /*
+     * Loading a saved tactic is an explicit
+     * user action, so it is allowed to replace
+     * the current XI.
+     */
 
-    setFormationState(tactic.formation);
-    setLineup(tactic.lineup);
+    setIsXIConfirmed(false);
+
+    setFormationState(
+      tactic.formation
+    );
+
+    setLineup({
+      ...tactic.lineup,
+    });
+
     setSelectedPlayer(null);
   }
 
@@ -383,9 +445,39 @@ export function useFormation() {
   // CONFIRM STARTING XI
   // ============================================================
 
-  function confirmStartingXI() {
+  function confirmStartingXI(): boolean {
+    const assignedPlayers =
+      getAssignedPlayers();
+
+    const uniquePlayerIds =
+      new Set(
+        assignedPlayers.map(
+          (player) => player.id
+        )
+      );
+
+    if (assignedPlayers.length !== 11) {
+      window.alert(
+        `⚠️ Starting XI must contain exactly 11 players.\n\nCurrent XI: ${assignedPlayers.length}/11`
+      );
+
+      return false;
+    }
+
+    if (
+      uniquePlayerIds.size !== 11
+    ) {
+      window.alert(
+        "⚠️ Starting XI contains duplicate players. Each player can only occupy one position."
+      );
+
+      return false;
+    }
+
     setSelectedPlayer(null);
     setIsXIConfirmed(true);
+
+    return true;
   }
 
   // ============================================================
@@ -401,7 +493,6 @@ export function useFormation() {
   // ============================================================
 
   function resetFormation() {
-    // Locked XI → cannot reset
     if (isXIConfirmed) {
       return;
     }
@@ -438,5 +529,7 @@ export function useFormation() {
     isXIConfirmed,
 
     resetFormation,
+
+    getStartingXIPlayerIds,
   };
 }
