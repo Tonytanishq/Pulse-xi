@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/app/AppShell";
+import MatchEventPanel from "@/components/matchdays/MatchEventPanel";
+import { players } from "@/lib/players";
 
 import {
   CalendarDays,
@@ -1392,7 +1394,33 @@ export default function MatchdaysPage() {
         </section>
       </div>
 
+      {activeMatchdays.length > 0 && (
       <section className="mt-6 rounded-3xl border border-cyan-500/20 bg-[#0B1120]/80 p-6 backdrop-blur-xl">
+        <div className="mb-5">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-400">
+            Live Match Center
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            Match Events
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Record goals, assists, cards and substitutions in real time.
+          </p>
+        </div>
+
+        <div className="space-y-5">
+          {activeMatchdays.map((matchday) => (
+            <MatchEventPanel
+              key={`events-${matchday.id}`}
+              matchdayId={matchday.id}
+              players={players}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section className="mt-6 rounded-3xl border border-cyan-500/20 bg-[#0B1120]/80 p-6 backdrop-blur-xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-400">
